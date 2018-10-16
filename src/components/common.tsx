@@ -9,14 +9,14 @@ export function em(n: number) {
     return n * 12;
 }
 
-type UnitType = number | [number, "fr"] | [number, "%"] | "auto";
+export type UnitType = number | string | "auto";
 
 export interface ILayout {
     width: number;
     height: number;
-    rows: UnitType[];
+    rows: UnitType[] | string;
     rowGap: number;
-    columns: UnitType[];
+    columns: UnitType[] | string;
     columnGap: number;
 }
 
@@ -25,14 +25,12 @@ export interface ISize {
     height: number;
 }
 
-export interface IBase {
-    style?: IStyle;
+export interface ILayoutBase {
+    style: IStyle;
     columnStart: number;
     columnEnd?: number;
     rowStart: number;
     rowEnd?: number;
-    enterFrame?: number;
-    exitFrame?: number;
     onMeasured?: (size: ISize) => void;
 }
 
@@ -59,32 +57,52 @@ function calcCellPositions(gap: number, cells: UnitType[], size: number, maxColR
     // track the total of the "fr" unit
     let totalFr = 0;
     const accumulatedWidth = cells.reduce<number>((p, cell, i) => {
+        if (maxColRowSize[i] === undefined) {
+            // console.log(`Missing ${i}`, maxColRowSize);
+            return p;
+        }
         if (typeof cell === "number") {
             p += cell;
         } else if (cell === "auto") {
             p += maxColRowSize[i] || 0;
-        } else if (typeof cell === "object" && Array.isArray(cell)) {
-            if (cell[1] === "fr") {
-                totalFr += cell[0];
-            } else if (cell[1] === "%") {
-                p += (cell[0] * remain) / 100;
+        } else if (typeof cell === "string") {
+            const cellStr = cell.trim();
+            if (cellStr.slice(-2) === "fr") {
+                const freeStr = cellStr.slice(0, -2);
+                const freeV = parseFloat(freeStr);
+                totalFr += freeV;
+            } else if (cellStr.slice(-1) === "%") {
+                const percentStr = cellStr.slice(0, -1);
+                const percent = parseFloat(percentStr);
+                p += (percent * remain) / 100;
             }
         }
         return p;
     }, 0);
     const free = remain - accumulatedWidth;
     let position = 0;
-    const positions = cells.map((cell, i) => {
+    const positions = cells.map((cell, _i) => {
+        const rowColIndex = _i + 1;
+        if (maxColRowSize[_i] === undefined) {
+            // console.log(`Missing skipping ${_i}`, maxColRowSize);
+            return position;
+        }
         if (typeof cell === "number") {
             position += cell + gap;
             return position;
         } else if (cell === "auto") {
-            position += (maxColRowSize[i] || 0) + gap;
-        } else if (typeof cell === "object" && Array.isArray(cell)) {
-            if (cell[1] === "fr") {
-                position += (cell[0] / totalFr) * free + gap;
-            } else if (cell[1] === "%") {
-                position += (cell[0] * remain) / 100 + gap;
+            position += (maxColRowSize[rowColIndex] || 0) + gap;
+        } else if (typeof cell === "string") {
+            const cellStr = cell.trim();
+            if (cellStr.slice(-2) === "fr") {
+                const freeStr = cellStr.slice(0, -2);
+                const freeV = parseFloat(freeStr);
+                // console.log(`total ${position}: fr:${cell[0]} total:${totalFr} free:${free}`);
+                position += (freeV / totalFr) * free + gap;
+            } else if (cellStr.slice(-1) === "%") {
+                const percentStr = cellStr.slice(0, -1);
+                const percent = parseFloat(percentStr);
+                position += (percent * remain) / 100 + gap;
             }
         }
         return position;
@@ -92,7 +110,7 @@ function calcCellPositions(gap: number, cells: UnitType[], size: number, maxColR
     return [0, ...positions];
 }
 
-function getMaxRowColCells(layout: ILayout, children: IBase[]) {
+function getMaxRowColCells(layout: ILayout, children: ILayoutBase[]) {
     // for children placed in one cell (start/end)
     // get the maximum child width/height
     // return a mapped rows/columns array with a correspond array of max
@@ -113,35 +131,34 @@ function getMaxRowColCells(layout: ILayout, children: IBase[]) {
     return { rowWidthMaxByCol, colHeightMaxByRow };
 }
 
-function getRowColPositions(layout: ILayout, children: IBase[]) {
+function getRowColPositions(layout: ILayout, children: ILayoutBase[]) {
     const { rowWidthMaxByCol, colHeightMaxByRow } = getMaxRowColCells(layout, children);
+    const rowTemplate = typeof layout.rows === "string" ? layout.rows.split(" ") : layout.rows;
     const rows = calcCellPositions(
         layout.rowGap,
-        layout.rows,
+        rowTemplate,
         layout.height,
-        layout.rows.map((row, i) => colHeightMaxByRow[i + 1] || 0)
+        rowTemplate.map((row, i) => colHeightMaxByRow[i + 1])
     );
+    const colTemplate = typeof layout.columns === "string" ? layout.columns.split(" ") : layout.columns;
     const columns = calcCellPositions(
         layout.columnGap,
-        layout.columns,
+        colTemplate,
         layout.width,
-        layout.columns.map((col, i) => rowWidthMaxByCol[i + 1] || 0)
+        colTemplate.map((col, i) => rowWidthMaxByCol[i + 1])
     );
     return { rows, columns };
 }
 
-export function getSizePositions(layout: ILayout, children: IBase[]): ISizePosition[] {
+export function getSizePositions(layout: ILayout, children: ILayoutBase[]): ISizePosition[] {
     const { rows, columns } = getRowColPositions(layout, children);
     return children.map(c => {
         const rowStart = c.rowStart - 1;
         const rowEnd = (c.rowEnd || c.rowStart + 1) - 1;
         const colStart = c.columnStart - 1;
         const colEnd = (c.columnEnd || c.columnStart + 1) - 1;
-        // console.log(
-        //     { c },
-        //     `${rows[rowStart]} to ${rows[rowEnd] - layout.rowGap - rows[rowStart]}`
-        // );
         return {
+            opacity: 1,
             top: rows[rowStart],
             height: rows[rowEnd] - layout.rowGap - rows[rowStart],
             left: columns[colStart],
@@ -149,27 +166,3 @@ export function getSizePositions(layout: ILayout, children: IBase[]): ISizePosit
         };
     });
 }
-
-// export function extractChildren(children: React.ReactNode): any[] {
-//     return React.Children.map(children, c => {
-//         const child = c as React.ComponentElement<any, any>;
-//         if (!child.props) {
-//             console.warn("Null props", child);
-//             return null;
-//         }
-//         return {
-//             ...child.props,
-//             key: child.key || child.props.id,
-//             id: child.props.id || child.key,
-//             children: !!child.props.children ? extractChildren(child.props.children) : null
-//         };
-//     }).filter(c => !!c);
-// }
-
-// export function keyStyles({ children, ...props }: any): any {
-//     return {
-//         ...props,
-//         children:
-//             (!!children && keyBy((children as any[]).filter(c => !!c.key).map(c => keyStyles(c)), p => p.key)) || null
-//     };
-// }

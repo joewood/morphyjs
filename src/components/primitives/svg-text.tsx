@@ -1,5 +1,6 @@
 import * as React from "react";
-import { pt, IStyle, IBase } from "../common";
+import { pt, IStyle } from "../common";
+import { IBase } from "../diagram";
 
 export interface TextStyle extends IStyle {
     filter?: string;
@@ -13,7 +14,7 @@ export interface ITextBoxPrimitiveProps extends IBase {
     // children: any[];
     text: string;
     // id: string;
-    style?: TextStyle;
+    style: TextStyle;
     dy: number;
     hideText?: boolean;
 }
@@ -37,16 +38,15 @@ export class TextBoxPrimitive extends React.Component<ITextBoxPrimitiveProps, an
 
     render() {
         const props = this.props;
-        let { fill, filter, stroke, textColor, strokeWidth } = props.style!;
-        const opacity =
-            ((props.style && props.style.opacity) || undefined) === undefined ? 1 : props.style && props.style.opacity!;
+        let { fill, filter, stroke, textColor, strokeWidth } = props.style;
+        const opacity = props.style.opacity === undefined ? 1 : props.style.opacity!;
         const { dy, text, hideText } = props;
         strokeWidth = strokeWidth || 1;
-        let { width, height, left, top } = props.style!;
-        left = (left || 0)+ strokeWidth/2;
-        top = (top || 0)+strokeWidth/2;
-        width = (width || 50)-strokeWidth;
-        height = (height || 50) - strokeWidth;
+        let { width, height, left, top } = props.style;
+        left = (left || 0) + strokeWidth / 2;
+        top = (top || 0) + strokeWidth / 2;
+        width = Math.max(0, (width || 10) - strokeWidth);
+        height = Math.max(0, (height || 10) - strokeWidth);
         let textY = height! / 2;
         const textX = width! / 2;
         if (dy < 0) textY = height! + dy;
