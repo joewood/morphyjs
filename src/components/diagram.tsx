@@ -1,8 +1,8 @@
+import { Dictionary, keyBy } from "lodash";
 import * as React from "react";
 // import { spring, TransitionMotion, TransitionPlainStyle, TransitionStyle, PlainStyle, Style } from "react-motion";
-import { getSizePositions, ILayoutBase, ILayout, ISizePosition } from "./common";
+import { getSizePositions, ILayout, ILayoutBase, ISizePosition } from "./common";
 import Filters from "./filters";
-import { Dictionary } from "lodash";
 
 type DirectionType = "top" | "left" | "right" | "bottom" | undefined;
 export interface IBase extends ILayoutBase {
@@ -14,7 +14,6 @@ export interface IBase extends ILayoutBase {
 
 interface IProps extends ILayout, React.ClassAttributes<Diagram> {
     frame: number;
-    generation?: number;
     style: React.CSSProperties;
     children: React.ReactElement<IBase>[];
 }
@@ -28,13 +27,13 @@ interface IState {
     currentFrame: number;
     lastFrame: number;
     velocities: {
-        [x: string]: IBaseStyle;
+        [x: string]: ISizePosition;
     };
     target: {
-        [x: string]: IBaseStyle;
+        [x: string]: ISizePosition;
     };
     current: {
-        [x: string]: IBaseStyle;
+        [x: string]: ISizePosition;
     };
 }
 
@@ -58,15 +57,7 @@ function getItems(children: React.ReactNode, { current }: IState) {
     return newChildren.filter(c => !!c);
 }
 
-// function easeInOutQuad(timeFrame: number, totalFrames: number, source: number | undefined | null, dest: number) {
-//     const change = dest - (source || 0);
-//     timeFrame /= totalFrames / 2;
-//     if (timeFrame < 1) return (change / 2) * timeFrame * timeFrame + (source || 0);
-//     timeFrame--;
-//     return (-change / 2) * (timeFrame * (timeFrame - 2) - 1) + (source || 0);
-// }
-
-// originals
+// originals constants
 // const springK = -30;
 // const springDamping = -0.97;
 // const mass = 0.1;
@@ -99,14 +90,14 @@ function springIn(
     return { velocity, current };
 }
 
-const frames = 120;
+const frames = 80;
 
 function getOriginFromDir(
-    dir: DirectionType,
+    direction: DirectionType,
     width: number,
     height: number
 ): { left: number | undefined; top: number | undefined } {
-    switch (dir) {
+    switch (direction) {
         case "top":
             return { top: height * -1, left: undefined };
         case "bottom":
@@ -138,30 +129,51 @@ export class Diagram extends React.Component<IProps, IState> {
         { frame, children, rowGap, rows, columnGap, columns, width, height }: IProps,
         { currentFrame, velocities, current, target, currentKeys, lastFrame }: IState
     ): IState | null {
+        // visible children include all children between enter/exit frame (+animate out time)
         const visibleChildren = React.Children.map(children!, child => child as React.ReactElement<IBase>).filter(
-            c => frame >= c.props.enterFrame!
+            c =>
+                frame >= c.props.enterFrame! && (c.props.exitFrame === undefined || frame <= c.props.exitFrame + frames)
         );
-        const childrenChanged = visibleChildren.reduce((p, c, i) => p || c.key !== currentKeys[i], false);
-        // const minDelta = visibleChildren.reduce((p, child) => {
-        //     return Math.min(p, Math.max(0, Math.min(frame - child.props.enterFrame!, frames)));
-        // }, frames);
-        // const spring = easeInOutQuad.bind(null, minDelta, frames);
-        const sizeAndPositions = childrenChanged
-            ? getSizePositions({ rows, columns, rowGap, columnGap, width, height }, visibleChildren.map(c => c.props))
+        // only run layout on a subset of children, don't include the exit animation
+        const layoutChildren = visibleChildren.filter(
+            c => frame >= c.props.enterFrame! && (c.props.exitFrame === undefined || frame < c.props.exitFrame)
+        );
+        // track layout changes by comparing old and new keys
+        const layoutHasChanged = layoutChildren.reduce((p, c, i) => p || c.key !== currentKeys[i], false);
+        const sizeAndPositions = layoutHasChanged
+            ? getSizePositions(
+                  { rows, columns, rowGap, columnGap, width, height },
+                  keyBy(layoutChildren.map(c => ({ ...(c.props as ILayoutBase), key: c.key! })), c => String(c.key!))
+              )
             : null;
+
         const ret = visibleChildren.reduce(
             (state, _child, index) => {
                 const child = _child as React.ReactElement<IBase>;
                 const { key } = child;
-                const delta = Math.max(0, Math.min(frame - child.props.enterFrame!, frames));
+                // fade in delta 0->frames after enterFrame
+                let delta = Math.max(0, Math.min(frame - child.props.enterFrame, frames));
 
-                const targetState = ((childrenChanged && sizeAndPositions ? sizeAndPositions[index] : target[key!]) ||
-                    {}) as IBaseStyle;
+                let targetState = layoutHasChanged && sizeAndPositions ? sizeAndPositions[key!] : target[key!];
+
                 const velocityState = velocities[key!] || {};
                 // const originalState = (childrenChanged ? current[key!] : originals[key!]) || {};
                 const currentState = current[key!] || {};
-                const opacity = delta * (targetState.opacity || 1);
-                const left = springIn(
+                let opacity = Math.min(1, delta / frames);
+                if (child.props.exitFrame !== undefined && frame >= child.props.exitFrame) {
+                    // optional exitDelta 0->frames after exitFrame
+                    // console.log("Exit Franes", targetState, currentState);
+                    // console.log("Get Dir", getOriginFromDir(child.props.exitDirection, width, height));
+                    delta = frame - child.props.exitFrame;
+                    opacity = Math.max(0, (frames - delta) / frames);
+                    targetState = {
+                        ...currentState,
+                        top: getOriginFromDir(child.props.exitDirection, width, height).top || currentState.top,
+                        left: getOriginFromDir(child.props.exitDirection, width, height).left || currentState.left
+                    };
+                }
+                let left: { velocity?: number; current?: number } = {};
+                left = springIn(
                     currentFrame,
                     lastFrame,
                     frames,
@@ -210,15 +222,8 @@ export class Diagram extends React.Component<IProps, IState> {
                     height: currentHeight.velocity,
                     width: currentWidth.velocity,
                     top: top.velocity,
-                    left: left.velocity,
-                    opacity: 0
+                    left: left.velocity
                 };
-
-                // if (childrenChanged) {
-                //     console.log("Frame " + key! + " " + props.frame + " " + minDelta);
-                //     console.table([originalState, targetState, currentState]);
-                // }
-
                 // state.originals[key!] = childrenChanged || endAnim ? currentState : originalState;
                 // state.current[key!] = currentState;
                 state.target[key!] = targetState;
@@ -228,10 +233,10 @@ export class Diagram extends React.Component<IProps, IState> {
                 currentKeys: visibleChildren.map(c => String(c.key)),
                 currentFrame: frame,
                 lastFrame: currentFrame,
-                velocities: {} as Dictionary<IBaseStyle>,
-                target: {} as Dictionary<IBaseStyle>,
+                velocities: {} as Dictionary<ISizePosition>,
+                target: {} as Dictionary<ISizePosition>,
                 current: {} as Dictionary<IBaseStyle>,
-                originals: {} as Dictionary<IBaseStyle>
+                originals: {} as Dictionary<ISizePosition>
             }
         );
         return ret;

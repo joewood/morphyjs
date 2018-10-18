@@ -1,4 +1,4 @@
-import { groupBy, mapValues } from "lodash";
+import { Dictionary, groupBy, mapValues, reduce, values } from "lodash";
 // import * as React from "react";
 
 export function pt(n: number) {
@@ -150,19 +150,26 @@ function getRowColPositions(layout: ILayout, children: ILayoutBase[]) {
     return { rows, columns };
 }
 
-export function getSizePositions(layout: ILayout, children: ILayoutBase[]): ISizePosition[] {
-    const { rows, columns } = getRowColPositions(layout, children);
-    return children.map(c => {
-        const rowStart = c.rowStart - 1;
-        const rowEnd = (c.rowEnd || c.rowStart + 1) - 1;
-        const colStart = c.columnStart - 1;
-        const colEnd = (c.columnEnd || c.columnStart + 1) - 1;
-        return {
-            opacity: 1,
-            top: rows[rowStart],
-            height: rows[rowEnd] - layout.rowGap - rows[rowStart],
-            left: columns[colStart],
-            width: columns[colEnd] - layout.columnGap - columns[colStart]
-        };
-    });
+export function getSizePositions(layout: ILayout, children: Dictionary<ILayoutBase>): Dictionary<ISizePosition> {
+    const { rows, columns } = getRowColPositions(layout, values(children));
+    return reduce(
+        children,
+        (p, c, k) => {
+            const rowStart = c.rowStart - 1;
+            const rowEnd = (c.rowEnd || c.rowStart + 1) - 1;
+            const colStart = c.columnStart - 1;
+            const colEnd = (c.columnEnd || c.columnStart + 1) - 1;
+            return {
+                ...p,
+                [k]: {
+                    opacity: 1,
+                    top: rows[rowStart],
+                    height: rows[rowEnd] - layout.rowGap - rows[rowStart],
+                    left: columns[colStart],
+                    width: columns[colEnd] - layout.columnGap - columns[colStart]
+                }
+            };
+        },
+        {}
+    );
 }

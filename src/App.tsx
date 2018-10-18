@@ -8,20 +8,19 @@ import { UnitType } from "./components/common";
 
 // let blockIndex = 0;
 
-function block(text: string, row: number, column: number, frame: number, style?: TextStyle) {
+function block(text: string, row: number, column: number, enterFrame: number, style?: TextStyle) {
     return {
         style: {
             fill: "black",
             stroke: "#e0e0e0",
-            // width: 50,
-            // height: 50,
             textColor: "white",
             filter: "#blur",
             strokeWidth: 4,
             ...style
         },
         dy: 5,
-        enterFrame: frame,
+        enterFrame: enterFrame,
+        exitFrame: enterFrame+200,
         text: text,
         key: `Block ${text}`,
         columnStart: column,
@@ -30,12 +29,12 @@ function block(text: string, row: number, column: number, frame: number, style?:
 }
 let nChild = 0;
 const children = [
-    <TextBoxPrimitive {...block("Box " + nChild++, 1, 1, 0)} enterDirection="left" />,
-    <TextBoxPrimitive {...block("Box " + nChild++, 1, 2, 20)} enterDirection="left" />,
-    <TextBoxPrimitive {...block("Box " + nChild++, 1, 3, 40)} enterDirection="left" />,
-    <TextBoxPrimitive {...block("Box " + nChild++, 1, 4, 60)} enterDirection="left" />,
-    <TextBoxPrimitive {...block("Box " + nChild++, 1, 5, 80)} enterDirection="left" />,
-    <TextBoxPrimitive {...block("Box " + nChild++, 1, 6, 100)} enterDirection="left" />,
+    <TextBoxPrimitive {...block("Box " + nChild++, 1, 1, 0)} enterDirection="top" exitDirection="bottom" />,
+    <TextBoxPrimitive {...block("Box " + nChild++, 1, 2, 20)}  enterDirection="top" exitDirection="bottom"/>,
+    <TextBoxPrimitive {...block("Box " + nChild++, 1, 3, 40)}  enterDirection="top" exitDirection="bottom"/>,
+    <TextBoxPrimitive {...block("Box " + nChild++, 1, 4, 60)}  enterDirection="top" exitDirection="bottom"/>,
+    <TextBoxPrimitive {...block("Box " + nChild++, 1, 5, 80)}  enterDirection="top" exitDirection="bottom" />,
+    <TextBoxPrimitive {...block("Box " + nChild++, 1, 6, 100)}  enterDirection="top" exitDirection="bottom"/>,
     // <TextBoxPrimitive {...block("Box!", 1, 6, 110, { width: 100, height: 100, stroke: "yellow" })} />,
     <TextBoxPrimitive
         columnEnd={6}
@@ -44,9 +43,10 @@ const children = [
     ...range(1, 6).map(n => (
         <TextBoxPrimitive
             {...block("Side " + n, n + 1, 6, 60 + n * 15, {
-                fill: `rgb(${n * 20 + 150},${230 - n * 20},100)`
+                fill: `rgb(${n * 20 + 50},${170 - n * 20},100)`
             })}
             enterDirection="top"
+            exitDirection="bottom"
         />
     ))
 ];
@@ -87,10 +87,9 @@ class App extends React.Component<unknown, { slider: number }> {
                     }}
                     width={600}
                     height={400}
-                    rowGap={5}
+                    rowGap={5} 
                     columnGap={5}
-                    frame={slider % 200}
-                    generation={Math.floor(slider / 200)}
+                    frame={slider % 500}
                     columns="20fr 20fr 20fr 20fr 20fr 20fr"
                     rows={
                         "2fr 2fr 2fr" +
@@ -103,7 +102,7 @@ class App extends React.Component<unknown, { slider: number }> {
                 <input
                     type="range"
                     min={0}
-                    max={200}
+                    max={400}
                     style={{ width: "100%" }}
                     value={slider}
                     onChange={this.onValueChange}
