@@ -1,5 +1,5 @@
 import * as React from "react";
-import { pt, IStyle } from "../common";
+import { IStyle } from "../common";
 import { IBase } from "../diagram";
 
 export interface TextStyle extends IStyle {
@@ -8,6 +8,7 @@ export interface TextStyle extends IStyle {
     strokeWidth?: number;
     textColor?: string;
     fill?: string;
+    fontSize?:number;
 }
 
 export interface ITextBoxPrimitiveProps extends IBase {
@@ -38,7 +39,7 @@ export class TextBoxPrimitive extends React.Component<ITextBoxPrimitiveProps, an
 
     render() {
         const props = this.props;
-        let { fill, filter, stroke, textColor, strokeWidth } = props.style;
+        let { fill, filter, stroke, textColor, strokeWidth, fontSize } = props.style;
         const opacity = props.style.opacity === undefined ? 1 : props.style.opacity!;
         const { dy, text, hideText } = props;
         strokeWidth = strokeWidth || 1;
@@ -82,7 +83,7 @@ export class TextBoxPrimitive extends React.Component<ITextBoxPrimitiveProps, an
                         dy={dy < 0 ? 0 : dy}
                         fill={textColor || "black"}
                         fontWeight="bold"
-                        fontSize={pt(7)}>
+                        fontSize={fontSize || 20}>
                         {text}
                     </text>
                 ) : null}
