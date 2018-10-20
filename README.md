@@ -37,4 +37,4 @@ Component that simulates CSS-Grid layout and animates using Hooke's Law of Sprin
 
 ## Example output
 
-![Screen Grab](./video/screen-grab.mp4)
+![Screen Grab](video/screen-grab.mp4)
