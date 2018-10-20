@@ -1,9 +1,12 @@
 import * as React from "react";
 import { repositionChildren, IDiagramState, IDiagramProps, calcAnimationState } from "./morph-common";
+import Measure from "react-measure";
 
 interface IProps extends IDiagramProps {}
 
-interface IState extends IDiagramState {}
+interface IState extends IDiagramState {
+    dimensions?: { width: number; height: number };
+}
 
 export class DomDiagram extends React.Component<IProps, IState> {
     constructor(p: IProps) {
@@ -14,14 +17,19 @@ export class DomDiagram extends React.Component<IProps, IState> {
             currentFrame: -1,
             velocities: {},
             target: {},
-            current: {}
+            current: {},
+            dimensions: {
+                width: -1,
+                height: -1
+            }
         };
     }
 
     static getDerivedStateFromProps(
-        { frame, children, rowGap, rows, columnGap, columns, width, height, defaultAnimFrames }: IProps,
-        { currentFrame, velocities, current, target, currentKeys, lastFrame }: IState
+        { frame, children, rowGap, rows, columnGap, columns, defaultAnimFrames }: IProps,
+        { currentFrame, velocities, current, target, currentKeys, lastFrame, dimensions }: IState
     ): IState | null {
+        const { width, height } = dimensions!;
         return calcAnimationState(
             { frame, children, rowGap, rows, columnGap, columns, width, height, defaultAnimFrames },
             { currentFrame, velocities, current, target, currentKeys, lastFrame }
@@ -29,22 +37,31 @@ export class DomDiagram extends React.Component<IProps, IState> {
     }
 
     render() {
-        const { style, width, height, children } = this.props;
+        const { style, children } = this.props;
         const items = repositionChildren(children!, this.state);
         return (
-            <div
-                style={{
-                    ...style,
-                    position: "relative",
-                    backgroundColor: "transparent",
-                    width: width,
-                    height: height,
-                    padding:0,
-                    margin:20,
-                    overflow:"hidden",
+            <Measure
+                bounds
+                onResize={contentRect => {
+                    console.log({ contentRect });
+                    this.setState({ dimensions: contentRect.bounds });
                 }}>
-                {items}
-            </div>
+                {({ measureRef }) => (
+                    <div
+                        ref={measureRef}
+                        style={{
+                            ...style,
+                            position: "relative",
+                            backgroundColor: "transparent",
+                            width: "100%",
+                            height: "100%",
+                            padding: 0,
+                            overflow: "hidden"
+                        }}>
+                        {items}
+                    </div>
+                )}
+            </Measure>
         );
     }
 }

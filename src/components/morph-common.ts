@@ -1,7 +1,6 @@
 import { Dictionary, keyBy } from "lodash";
 import * as React from "react";
-import { getSizePositions, ICssGridLayout, IChildGridAssignment, ISizePosition } from "./layout";
-
+import { getSizePositions, ICssGridLayout, IChildGridAssignment, ISizePosition, UnitType } from "./layout";
 
 export interface IBaseStyle extends ISizePosition {
     opacity?: number;
@@ -9,7 +8,7 @@ export interface IBaseStyle extends ISizePosition {
 
 export type DirectionType = "top" | "left" | "right" | "bottom" | undefined;
 export interface IAnimatedChild extends IChildGridAssignment {
-    style:IBaseStyle;
+    style: IBaseStyle;
     enterFrame: number;
     exitFrame?: number;
     enterDirection?: DirectionType;
@@ -68,7 +67,6 @@ export function spring(
     return { velocity, current };
 }
 
-
 export function getOriginFromDir(
     direction: DirectionType,
     width: number,
@@ -92,11 +90,19 @@ interface ICalcLayoutProps extends ICssGridLayout {
     key?: string | number;
     frame: number;
     children: React.ReactElement<IAnimatedChild>[];
-    defaultAnimFrames:number;
+    defaultAnimFrames: number;
 }
 
-export interface IDiagramProps extends ICalcLayoutProps {
-    style: React.CSSProperties;
+export interface IDiagramProps  {
+    key?: string | number;
+    rows: UnitType[] | string;
+    rowGap: number;
+    columns: UnitType[] | string;
+    columnGap: number;
+    frame: number;
+    children: React.ReactElement<IAnimatedChild>[];
+    defaultAnimFrames: number;
+    style?: React.CSSProperties;
 }
 
 export interface IDiagramState {
@@ -115,7 +121,8 @@ export function calcAnimationState(
     // visible children include all children between enter/exit frame (+animate out time)
     const visibleChildren = React.Children.map(children!, child => child as React.ReactElement<IAnimatedChild>).filter(
         c =>
-            frame >= c.props.enterFrame! && (c.props.exitFrame === undefined || frame <= c.props.exitFrame + defaultAnimFrames)
+            frame >= c.props.enterFrame! &&
+            (c.props.exitFrame === undefined || frame <= c.props.exitFrame + defaultAnimFrames)
     );
     // only run layout on a subset of children, don't include the exit animation
     const layoutChildren = visibleChildren.filter(
@@ -126,7 +133,9 @@ export function calcAnimationState(
     const sizeAndPositions = layoutHasChanged
         ? getSizePositions(
               { rows, columns, rowGap, columnGap, width, height },
-              keyBy(layoutChildren.map(c => ({ ...(c.props as IChildGridAssignment), key: c.key! })), c => String(c.key!))
+              keyBy(layoutChildren.map(c => ({ ...(c.props as IChildGridAssignment), key: c.key! })), c =>
+                  String(c.key!)
+              )
           )
         : null;
 

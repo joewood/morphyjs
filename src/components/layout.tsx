@@ -136,14 +136,14 @@ function getRowColPositions(layout: ICssGridLayout, children: IChildGridAssignme
     const rows = calcCellPositions(
         layout.rowGap,
         rowTemplate,
-        layout.height,
+        layout.height!,
         rowTemplate.map((row, i) => colHeightMaxByRow[i + 1])
     );
     const colTemplate = typeof layout.columns === "string" ? layout.columns.split(" ") : layout.columns;
     const columns = calcCellPositions(
         layout.columnGap,
         colTemplate,
-        layout.width,
+        layout.width!,
         colTemplate.map((col, i) => rowWidthMaxByCol[i + 1])
     );
     return { rows, columns };

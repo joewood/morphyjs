@@ -68,7 +68,7 @@ const domChildren = [
     />,
     ...range(1, 7).map(n => (
         <DivPrimitive
-            {...block("Side " + n, n , 6, 60 + n * 15, {
+            {...block("Side " + n, n, 6, 60 + n * 15, {
                 fill: `rgb(${n * 20 + 50},${80 + n * 20},100)`
             })}
             enterDirection="top"
@@ -76,7 +76,6 @@ const domChildren = [
         />
     ))
 ];
-
 
 const title = {
     fontSize: 34,
@@ -169,10 +168,6 @@ class App extends React.Component<unknown, { slider: number }> {
         }
     };
 
-    onValueChange = (v: React.ChangeEvent<HTMLInputElement>) => {
-        this.setState({ slider: v.target.valueAsNumber });
-    };
-
     componentDidMount() {
         this.onStartStop(null);
     }
@@ -180,38 +175,26 @@ class App extends React.Component<unknown, { slider: number }> {
     public render() {
         const { slider } = this.state;
         return (
-            <div className="App" style={{ width:"100uv", height:"100uw", backgroundColor: "black" }}>
+            <div
+                style={{
+                    width: "calc( 100% - 20px )",
+                    height: "calc( 100% - 20px )",
+                    margin: 20, 
+                    backgroundColor: "black"
+                }}>
                 <DomDiagram
                     key="diagram"
-                    style={{
-                        margin: 20
-                    }}
-                    width={600}
-                    height={400}
+                    style={{}}
                     rowGap={5}
                     columnGap={5}
                     frame={slider % 500}
                     columns="20fr 20fr 20fr 20fr 20fr 20fr"
                     defaultAnimFrames={frames}
-                    rows={
-                        range(1, 10)
-                            .map<UnitType>(n => "10fr")
-                            .join(" ")
-                    }>
+                    rows={range(1, 10)
+                        .map<UnitType>(n => "10fr")
+                        .join(" ")}>
                     {domChildren}
                 </DomDiagram>
-                <input
-                    type="range"
-                    min={0}
-                    max={400}
-                    style={{ width: "100%" }}
-                    value={0}
-                    onChange={this.onValueChange}
-                />
-                <label key="l" title="Run:  ">
-                    Run:
-                    <input type="checkbox" defaultChecked={true} min={0} max={200} onChange={this.onStartStop} />
-                </label>
             </div>
         );
     }

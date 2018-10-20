@@ -1,10 +1,13 @@
 import * as React from "react";
 import { repositionChildren, IDiagramState, IDiagramProps, calcAnimationState } from "./morph-common";
 import Filters from "./filters";
+import Measure from "react-measure";
 
 interface IProps extends IDiagramProps {}
 
-interface IState extends IDiagramState {}
+interface IState extends IDiagramState {
+    dimensions?: { width: number; height: number };
+}
 
 export class Diagram extends React.Component<IProps, IState> {
     // private svg: SVGSVGElement | null;
@@ -16,14 +19,19 @@ export class Diagram extends React.Component<IProps, IState> {
             currentFrame: -1,
             velocities: {},
             target: {},
-            current: {}
+            current: {},
+            dimensions: {
+                width: -1,
+                height: -1
+            }
         };
     }
 
     static getDerivedStateFromProps(
-        { frame, children, rowGap, rows, columnGap, columns, width, height, defaultAnimFrames }: IProps,
-        { currentFrame, velocities, current, target, currentKeys, lastFrame }: IState
+        { frame, children, rowGap, rows, columnGap, columns, defaultAnimFrames }: IProps,
+        { currentFrame, velocities, current, target, dimensions, currentKeys, lastFrame }: IState
     ): IState | null {
+        const { width, height } = dimensions!;
         return calcAnimationState(
             { frame, children, rowGap, rows, columnGap, columns, width, height, defaultAnimFrames },
             { currentFrame, velocities, current, target, currentKeys, lastFrame }
@@ -31,20 +39,30 @@ export class Diagram extends React.Component<IProps, IState> {
     }
 
     render() {
-        const { style, width, height, children } = this.props;
+        const { style, children } = this.props;
         const items = repositionChildren(children!, this.state);
         return (
-            <svg
-                xmlns="http://www.w3.core/2000/svg"
-                style={{
-                    ...style,
-                    backgroundColor: "transparent",
-                    width: width,
-                    height: height
+            <Measure
+                bounds
+                onResize={contentRect => {
+                    console.log({ contentRect });
+                    this.setState({ dimensions: contentRect.bounds });
                 }}>
-                <Filters />
-                {items}
-            </svg>
+                {({ measureRef }) => (
+                    <svg
+                        ref={measureRef}
+                        xmlns="http://www.w3.core/2000/svg"
+                        style={{
+                            ...style,
+                            backgroundColor: "transparent",
+                            width: "100%",
+                            height: "100%"
+                        }}>
+                        <Filters />
+                        {items}
+                    </svg>
+                )}
+            </Measure>
         );
     }
 }
