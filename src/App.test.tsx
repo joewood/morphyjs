@@ -1,7 +1,7 @@
 // import * as React from "react";
 // import * as ReactDOM from "react-dom";
 // import App from "./App";
-import { getSizePositions, ILayout, ILayoutBase } from "./components/common";
+import { getSizePositions, ICssGridLayout, IChildGridAssignment } from "./components/layout";
 import { Dictionary } from "lodash";
 
 // it("renders without crashing", () => {
@@ -11,7 +11,7 @@ import { Dictionary } from "lodash";
 // });
 
 test("Absolute checks", () => {
-    const layout: ILayout = {
+    const layout: ICssGridLayout = {
         width: 100,
         height: 100,
         columns: [30, 30],
@@ -19,7 +19,7 @@ test("Absolute checks", () => {
         columnGap: 15,
         rowGap: 10
     };
-    const children: Dictionary<ILayoutBase> = {
+    const children: Dictionary<IChildGridAssignment> = {
         one: { style: {}, columnStart: 1, rowStart: 1 },
         two: { style: {}, columnStart: 2, rowStart: 2 }
      };
@@ -29,7 +29,7 @@ test("Absolute checks", () => {
 });
 
 test("Percent Checks", () => {
-    const layout: ILayout = {
+    const layout: ICssGridLayout = {
         width: 130,
         height: 100,
         columns: "30% 50% 20%",
@@ -37,7 +37,7 @@ test("Percent Checks", () => {
         columnGap: 15,
         rowGap: 10
     };
-    const children: Dictionary<ILayoutBase> = {
+    const children: Dictionary<IChildGridAssignment> = {
         one: { style: {}, columnStart: 1, rowStart: 1 },
         two: { style: {}, columnStart: 2, rowStart: 1 },
         three: { style: {}, columnStart: 3, rowStart: 1 }
@@ -49,7 +49,7 @@ test("Percent Checks", () => {
 });
 
 test("Free Checks", () => {
-    const layout: ILayout = {
+    const layout: ICssGridLayout = {
         width: 130,
         height: 100,
         columns: "20% 50fr 50fr",
@@ -57,7 +57,7 @@ test("Free Checks", () => {
         columnGap: 15,
         rowGap: 10
     };
-    const children: Dictionary<ILayoutBase> = {
+    const children: Dictionary<IChildGridAssignment> = {
         one: { style: {}, columnStart: 1, rowStart: 1 },
         two: { style: {}, columnStart: 2, rowStart: 1 },
         three: { style: {}, columnStart: 3, rowStart: 1 }
@@ -69,7 +69,7 @@ test("Free Checks", () => {
 });
 
 test("Missing Column Checks", () => {
-    const layout: ILayout = {
+    const layout: ICssGridLayout = {
         width: 130,
         height: 100,
         columns: "20% 50fr 50fr",
@@ -77,7 +77,7 @@ test("Missing Column Checks", () => {
         columnGap: 15,
         rowGap: 10
     };
-    const children: Dictionary<ILayoutBase> = {
+    const children: Dictionary<IChildGridAssignment> = {
         one: { style: {}, columnStart: 1, rowStart: 1 },
         three: { style: {}, columnStart: 3, rowStart: 1 }
     };

@@ -1,14 +1,17 @@
 import * as React from "react";
 import "./App.css";
+//@ts-ignore
 import { Diagram } from "./components/diagram";
+import { DomDiagram } from "./components/dom-morphy";
 
-import { TextBoxPrimitive, TextStyle } from "./components/primitives/svg-text";
+import { TextBoxPrimitive, ITextStyle } from "./components/primitives/svg-text";
 import { range } from "lodash";
-import { UnitType } from "./components/common";
+import { UnitType } from "./components/layout";
+import { DivPrimitive, IDivTextStyle } from "./components/primitives/div-text";
 
 // let blockIndex = 0;
 
-function block(text: string, row: number, column: number, enterFrame: number, style?: TextStyle) {
+function block(text: string, row: number, column: number, enterFrame: number, style?: ITextStyle | IDivTextStyle) {
     return {
         style: {
             fill: "black",
@@ -52,6 +55,29 @@ const testChildren = [
     ))
 ];
 
+// @ts-ignore
+const domChildren = [
+    <DivPrimitive {...block("Box " + nChild++, 1, 1, 0)} enterDirection="top" exitDirection="bottom" />,
+    <DivPrimitive {...block("Box " + nChild++, 1, 2, 20)} enterDirection="top" exitDirection="bottom" />,
+    <DivPrimitive {...block("Box " + nChild++, 1, 3, 40)} enterDirection="top" exitDirection="bottom" />,
+    <DivPrimitive {...block("Box " + nChild++, 1, 4, 60)} enterDirection="top" exitDirection="bottom" />,
+    <DivPrimitive {...block("Box " + nChild++, 1, 5, 80)} enterDirection="top" exitDirection="bottom" />,
+    <DivPrimitive
+        columnEnd={6}
+        {...block("Middle Bottom", 4, 1, 30, { stroke: "blue", fill: "#101030", width: 300, height: 100 })}
+    />,
+    ...range(1, 7).map(n => (
+        <DivPrimitive
+            {...block("Side " + n, n , 6, 60 + n * 15, {
+                fill: `rgb(${n * 20 + 50},${80 + n * 20},100)`
+            })}
+            enterDirection="top"
+            exitDirection="right"
+        />
+    ))
+];
+
+
 const title = {
     fontSize: 34,
     fill: "black",
@@ -61,6 +87,9 @@ const title = {
     strokeWidth: 0
 };
 
+const frames = 80;
+
+// @ts-ignore
 const presentation = [
     <TextBoxPrimitive
         key="Title"
@@ -151,8 +180,8 @@ class App extends React.Component<unknown, { slider: number }> {
     public render() {
         const { slider } = this.state;
         return (
-            <div className="App" style={{ backgroundColor: "black" }}>
-                <Diagram
+            <div className="App" style={{ width:"100uv", height:"100uw", backgroundColor: "black" }}>
+                <DomDiagram
                     key="diagram"
                     style={{
                         margin: 20
@@ -163,14 +192,14 @@ class App extends React.Component<unknown, { slider: number }> {
                     columnGap={5}
                     frame={slider % 500}
                     columns="20fr 20fr 20fr 20fr 20fr 20fr"
+                    defaultAnimFrames={frames}
                     rows={
-                        "2fr 2fr 2fr" +
-                        range(1, 6)
-                            .map<UnitType>(n => "2fr")
+                        range(1, 10)
+                            .map<UnitType>(n => "10fr")
                             .join(" ")
                     }>
-                    {presentation}
-                </Diagram>
+                    {domChildren}
+                </DomDiagram>
                 <input
                     type="range"
                     min={0}

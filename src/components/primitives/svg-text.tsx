@@ -1,21 +1,20 @@
 import * as React from "react";
-import { IStyle } from "../common";
-import { IBase } from "../diagram";
+import { IAnimatedChild, IBaseStyle } from "../morph-common";
 
-export interface TextStyle extends IStyle {
+export interface ITextStyle extends IBaseStyle {
     filter?: string;
     stroke?: string;
     strokeWidth?: number;
     textColor?: string;
     fill?: string;
-    fontSize?:number;
+    fontSize?: number;
 }
 
-export interface ITextBoxPrimitiveProps extends IBase {
+export interface ITextBoxPrimitiveProps extends IAnimatedChild {
     // children: any[];
     text: string;
     // id: string;
-    style: TextStyle;
+    style: ITextStyle;
     dy: number;
     hideText?: boolean;
 }
