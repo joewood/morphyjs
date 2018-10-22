@@ -1,5 +1,6 @@
 import * as React from "react";
 import { repositionChildren, IDiagramState, IDiagramProps, calcAnimationState } from "./morph-common";
+import Filters from "./filters";
 import Measure from "react-measure";
 
 interface IProps extends IDiagramProps {}
@@ -8,7 +9,8 @@ interface IState extends IDiagramState {
     dimensions?: { width: number; height: number };
 }
 
-export class DomDiagram extends React.Component<IProps, IState> {
+export class Diagram extends React.Component<IProps, IState> {
+    // private svg: SVGSVGElement | null;
     constructor(p: IProps) {
         super(p);
         this.state = {
@@ -27,7 +29,7 @@ export class DomDiagram extends React.Component<IProps, IState> {
 
     static getDerivedStateFromProps(
         { frame, children, rowGap, rows, columnGap, columns, defaultAnimFrames }: IProps,
-        { currentFrame, velocities, current, target, currentKeys, lastFrame, dimensions }: IState
+        { currentFrame, velocities, current, target, dimensions, currentKeys, lastFrame }: IState
     ): IState | null {
         const { width, height } = dimensions!;
         return calcAnimationState(
@@ -47,19 +49,18 @@ export class DomDiagram extends React.Component<IProps, IState> {
                     this.setState({ dimensions: contentRect.bounds });
                 }}>
                 {({ measureRef }) => (
-                    <div
+                    <svg
                         ref={measureRef}
+                        xmlns="http://www.w3.core/2000/svg"
                         style={{
                             ...style,
-                            position: "relative",
                             backgroundColor: "transparent",
                             width: "100%",
-                            height: "100%",
-                            padding: 0,
-                            overflow: "hidden"
+                            height: "100%"
                         }}>
+                        <Filters />
                         {items}
-                    </div>
+                    </svg>
                 )}
             </Measure>
         );

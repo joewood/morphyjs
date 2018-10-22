@@ -1,15 +1,9 @@
-import * as React from "react";
-import "./App.css";
-//@ts-ignore
-import { Diagram } from "./components/diagram";
-import { DomDiagram } from "./components/dom-morphy";
-
-import { TextBoxPrimitive, ITextStyle } from "./components/primitives/svg-text";
 import { range } from "lodash";
-import { UnitType } from "./components/layout";
-import { DivPrimitive, IDivTextStyle } from "./components/primitives/div-text";
-
-// let blockIndex = 0;
+import * as React from "react";
+import * as ReactDOM from "react-dom";
+import { DomDiagram, DivPrimitive, IDivTextStyle } from "../src/dom-morphy";
+import { ITextStyle, TextBoxPrimitive } from "../src/primitives/svg-text";
+import "./index.css";
 
 function block(text: string, row: number, column: number, enterFrame: number, style?: ITextStyle | IDivTextStyle) {
     return {
@@ -179,7 +173,7 @@ class App extends React.Component<unknown, { slider: number }> {
                 style={{
                     width: "calc( 100% - 20px )",
                     height: "calc( 100% - 20px )",
-                    margin: 20, 
+                    margin: 20,
                     backgroundColor: "black"
                 }}>
                 <DomDiagram
@@ -191,7 +185,7 @@ class App extends React.Component<unknown, { slider: number }> {
                     columns="20fr 20fr 20fr 20fr 20fr 20fr"
                     defaultAnimFrames={frames}
                     rows={range(1, 10)
-                        .map<UnitType>(n => "10fr")
+                        .map(n => "10fr")
                         .join(" ")}>
                     {domChildren}
                 </DomDiagram>
@@ -200,4 +194,4 @@ class App extends React.Component<unknown, { slider: number }> {
     }
 }
 
-export default App;
+ReactDOM.render(<App />, document.getElementById("root") as HTMLElement);

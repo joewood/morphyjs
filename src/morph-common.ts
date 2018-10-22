@@ -100,7 +100,7 @@ export interface IDiagramProps  {
     columns: UnitType[] | string;
     columnGap: number;
     frame: number;
-    children: React.ReactElement<IAnimatedChild>[];
+    children: any[];
     defaultAnimFrames: number;
     style?: React.CSSProperties;
 }
