@@ -1,8 +1,7 @@
 import { range } from "lodash";
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import { DomDiagram, DivPrimitive, IDivTextStyle } from "../src/dom-morphy";
-import { ITextStyle, TextBoxPrimitive } from "../src/primitives/svg-text";
+import { ITextStyle, TextBoxPrimitive, DomDiagram, DivPrimitive, IDivTextStyle } from "../src";
 import "./index.css";
 
 function block(text: string, row: number, column: number, enterFrame: number, style?: ITextStyle | IDivTextStyle) {

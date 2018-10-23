@@ -2,6 +2,7 @@ import * as React from "react";
 import { repositionChildren, IDiagramState, IDiagramProps, calcAnimationState } from "./morph-common";
 import Filters from "./filters";
 import Measure from "react-measure";
+export { TextBoxPrimitive, ITextStyle } from "./primitives/svg-text";
 
 interface IProps extends IDiagramProps {}
 
@@ -10,9 +11,8 @@ interface IState extends IDiagramState {
 }
 
 export class Diagram extends React.Component<IProps, IState> {
-    // private svg: SVGSVGElement | null;
-    constructor(p: IProps) {
-        super(p);
+    constructor(props: IProps) {
+        super(props);
         this.state = {
             currentKeys: [],
             lastFrame: -1,
